@@ -16,6 +16,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.parcelize.Parcelize
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.*
 
@@ -27,8 +28,7 @@ class OneViewModel(
 ) : ViewModel() {
 
     // 検索結果
-    // TODO: 関数の責務が複数存在してるため、責務を分ける
-    fun searchResults(inputText: String): List<RepositoryItem> = runBlocking {
+    fun searchResults(inputText: String): List<item> = runBlocking {
         val client = HttpClient(Android)
 
         return@runBlocking GlobalScope.async {
@@ -37,53 +37,35 @@ class OneViewModel(
                 parameter("q", inputText)
             }
 
-            val items = mutableListOf<RepositoryItem>()
-
-            //
-            if (response == null) {
-                return@async items.toList();
-            }
-
-            val jsonBody = JSONObject(response.receive<String>())
+            val items = mutableListOf<item>()
+            val jsonBody = JSONObject(response.body<String>())
             val jsonItems = jsonBody.optJSONArray("items")!!
 
-
-            /**
-             * 検索結果の該当個数分itemsに追加される
-             */
-            // TODO: json変換をmodel内でできるようにする
-            for (i in 0 until jsonItems.length()) {
-                val jsonItem = jsonItems.optJSONObject(i)!!
-                val name = jsonItem.optString("full_name")
-                val ownerIconUrl = jsonItem.optJSONObject("owner")!!.optString("avatar_url")
-                val language = jsonItem.optString("language")
-                val stargazersCount = jsonItem.optLong("stargazers_count")
-                val watchersCount = jsonItem.optLong("watchers_count")
-                val forksCount = jsonItem.optLong("forks_conut")
-                val openIssuesCount = jsonItem.optLong("open_issues_count")
-
-                items.add(
-                    RepositoryItem(
-                        name = name,
-                        ownerIconUrl = ownerIconUrl,
-                        language = context.getString(R.string.written_language, language),
-                        stargazersCount = stargazersCount,
-                        watchersCount = watchersCount,
-                        forksCount = forksCount,
-                        openIssuesCount = openIssuesCount
-                    )
-                )
-            }
+            // 検索結果の該当個数分itemsに追加される
+            generateItemsFromJSON(jsonItems)
 
             lastSearchDate = Date()
 
             return@async items.toList()
         }.await()
     }
+
+    // json型からitemクラスに変換する
+    private fun generateItemsFromJSON(jsonItems: JSONArray): List<item> {
+        val items = mutableListOf<item>()
+
+        for (i in 0 until jsonItems.length()) {
+            val jsonItem = jsonItems.optJSONObject(i)!!
+            items.add(item.fromJSON(jsonItem))
+        }
+
+        return items
+    }
 }
 
+// HACK: クラス名を変更するとunresolved reference "item"となってしまうので一旦この命名のままにする
 @Parcelize
-data class RepositoryItem(
+data class item(
     val name: String,
     val ownerIconUrl: String,
     val language: String,
@@ -91,4 +73,19 @@ data class RepositoryItem(
     val watchersCount: Long,
     val forksCount: Long,
     val openIssuesCount: Long,
-) : Parcelable
+) : Parcelable {
+    companion object {
+        fun fromJSON(json: JSONObject): item {
+            return item(
+                name = json.optString("full_name"),
+                ownerIconUrl = json.optJSONObject("owner")!!.optString("avatar_url"),
+                language = json.optString("language"),
+                stargazersCount = json.optLong("stargazers_count"),
+                watchersCount = json.optLong("watchers_count"),
+                forksCount = json.optLong("forks_conut"),
+                openIssuesCount = json.optLong("open_issues_count"),
+            )
+        }
+    }
+
+}

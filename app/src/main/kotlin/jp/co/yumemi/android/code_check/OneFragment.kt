@@ -14,31 +14,29 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.*
 import jp.co.yumemi.android.code_check.databinding.FragmentOneBinding
 
-// TODO: one twoという意味不明のfragmentを修正する
 class OneFragment: Fragment(R.layout.fragment_one){
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val binding= FragmentOneBinding.bind(view)
+        val binding = FragmentOneBinding.bind(view)
 
-        val viewModel= OneViewModel(requireContext())
+        val viewModel = OneViewModel(requireContext())
 
-        val layoutManager= LinearLayoutManager(requireContext())
+        val layoutManager = LinearLayoutManager(requireContext())
 
-        val dividerItemDecoration=
+        val dividerItemDecoration =
             DividerItemDecoration(requireContext(), layoutManager.orientation)
 
-        val adapter= CustomAdapter(object : CustomAdapter.OnItemClickListener{
-            override fun itemClick(item: RepositoryItem){
+        val adapter = CustomAdapter(object : CustomAdapter.OnItemClickListener{
+            override fun itemClick(item: item){
                 navigateSelectedRepositoryFragment(item)
             }
         })
 
-        // TODO: ネストが深い気がする
         binding.searchInputText
             .setOnEditorActionListener{ editText, action, _ ->
-                if (action== EditorInfo.IME_ACTION_SEARCH) {
+                if (action == EditorInfo.IME_ACTION_SEARCH) {
                     editText.text.toString().let {
                         viewModel.searchResults(it).apply{
                             adapter.submitList(this)
@@ -56,34 +54,32 @@ class OneFragment: Fragment(R.layout.fragment_one){
         }
     }
 
-    fun navigateSelectedRepositoryFragment(item: RepositoryItem) {
-        // TODO: メソッド名が長すぎないか？
+    fun navigateSelectedRepositoryFragment(item: item) {
         val action= OneFragmentDirections
             .actionRepositoriesFragmentToRepositoryFragment(item = item)
         findNavController().navigate(action)
     }
 }
 
-// TODO: なぜglobalに変数を定義してるのか
-val diff_util= object: DiffUtil.ItemCallback<RepositoryItem>(){
-    override fun areItemsTheSame(oldItem: RepositoryItem, newItem: RepositoryItem): Boolean {
-        return oldItem.name== newItem.name
+val diff_util= object: DiffUtil.ItemCallback<item>(){
+    override fun areItemsTheSame(oldItem: item, newItem: item): Boolean {
+        return oldItem.name == newItem.name
     }
 
-    override fun areContentsTheSame(oldItem: RepositoryItem, newItem: RepositoryItem): Boolean {
-        return oldItem== newItem
+    override fun areContentsTheSame(oldItem: item, newItem: item): Boolean {
+        return oldItem == newItem
     }
 
 }
 
 class CustomAdapter(
     private val itemClickListener: OnItemClickListener,
-) : ListAdapter<RepositoryItem, CustomAdapter.ViewHolder>(diff_util){
+) : ListAdapter<item, CustomAdapter.ViewHolder>(diff_util){
 
     class ViewHolder(view: View): RecyclerView.ViewHolder(view)
 
     interface OnItemClickListener {
-    	fun itemClick(item: RepositoryItem)
+    	fun itemClick(item: item)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

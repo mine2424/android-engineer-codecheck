@@ -24,20 +24,19 @@ class TwoFragment : Fragment(R.layout.fragment_two) {
 
         binding = FragmentTwoBinding.bind(view)
 
-        var item = args.item
+        val item = args.item
 
         // bindingがnullだったら処理を終了させる
         if (binding == null){
-            return;
+            return
         }
 
-        // TODO: 代入の仕方が助長すぎる。
         binding!!.ownerIconView.load(item.ownerIconUrl)
-        binding!!.nameView.text = item.name;
-        binding!!.languageView.text = item.language;
-        binding!!.starsView.text = "${item.stargazersCount} stars";
-        binding!!.watchersView.text = "${item.watchersCount} watchers";
-        binding!!.forksView.text = "${item.forksCount} forks";
-        binding!!.openIssuesView.text = "${item.openIssuesCount} open issues";
+        binding!!.nameView.text = item.name
+        binding!!.languageView.text = item.language
+        binding!!.starsView.text = "${item.stargazersCount} stars"
+        binding!!.watchersView.text = "${item.watchersCount} watchers"
+        binding!!.forksView.text = "${item.forksCount} forks"
+        binding!!.openIssuesView.text = "${item.openIssuesCount} open issues"
     }
 }
