@@ -23,28 +23,35 @@ import java.util.*
  * TwoFragment で使う
  */
 class OneViewModel(
-    val context: Context
+    private val context: Context
 ) : ViewModel() {
 
     // 検索結果
-    fun searchResults(inputText: String): List<item> = runBlocking {
+    // TODO: 関数の責務が複数存在してるため、責務を分ける
+    fun searchResults(inputText: String): List<RepositoryItem> = runBlocking {
         val client = HttpClient(Android)
 
         return@runBlocking GlobalScope.async {
-            val response: HttpResponse = client?.get("https://api.github.com/search/repositories") {
+            val response: HttpResponse = client.get("https://api.github.com/search/repositories") {
                 header("Accept", "application/vnd.github.v3+json")
                 parameter("q", inputText)
             }
 
-            val jsonBody = JSONObject(response.receive<String>())
+            val items = mutableListOf<RepositoryItem>()
 
+            //
+            if (response == null) {
+                return@async items.toList();
+            }
+
+            val jsonBody = JSONObject(response.receive<String>())
             val jsonItems = jsonBody.optJSONArray("items")!!
 
-            val items = mutableListOf<item>()
 
             /**
-             * アイテムの個数分ループする
+             * 検索結果の該当個数分itemsに追加される
              */
+            // TODO: json変換をmodel内でできるようにする
             for (i in 0 until jsonItems.length()) {
                 val jsonItem = jsonItems.optJSONObject(i)!!
                 val name = jsonItem.optString("full_name")
@@ -56,7 +63,7 @@ class OneViewModel(
                 val openIssuesCount = jsonItem.optLong("open_issues_count")
 
                 items.add(
-                    item(
+                    RepositoryItem(
                         name = name,
                         ownerIconUrl = ownerIconUrl,
                         language = context.getString(R.string.written_language, language),
@@ -76,7 +83,7 @@ class OneViewModel(
 }
 
 @Parcelize
-data class item(
+data class RepositoryItem(
     val name: String,
     val ownerIconUrl: String,
     val language: String,
